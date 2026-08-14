@@ -64,9 +64,12 @@ HORIZON = 24  # hours ahead
 SEASONAL_PERIOD_DAILY = 24
 SEASONAL_PERIOD_WEEKLY = 168
 
-#: Context lengths swept for the foundation model (hours). 720 fits TimesFM's 1024 cap.
-CONTEXT_LENGTHS = (168, 336, 720)
-DEFAULT_CONTEXT = 720
+#: Context lengths swept for the foundation model (hours), capped by TimesFM's max_context
+#: of 1024. The sweep began at 168/336/720; validation error fell monotonically across
+#: those three, putting the optimum on the edge of the grid, so it was extended to 896 and
+#: 1024 to bracket the minimum. It lands at 896 (1024 is within 0.1% and effectively tied).
+CONTEXT_LENGTHS = (168, 336, 720, 896, 1024)
+DEFAULT_CONTEXT = 896
 
 #: Rolling-origin stride. 6h keeps ~830 origins over the test set and samples all four
 #: times of day as origins, so the horizon curve is not measured at one clock hour only.
@@ -97,4 +100,5 @@ MODEL_LABELS = {
     "seasonal_naive_weekly": "Seasonal naive (m=168)",
     "lightgbm": "LightGBM",
     "timesfm": "TimesFM 2.5 (zero-shot)",
+    "timesfm_ctx896": "TimesFM 2.5, ctx 896 (zero-shot)",
 }

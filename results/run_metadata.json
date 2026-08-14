@@ -26,5 +26,11 @@
   "test_end": "2025-06-24 23:00:00+05:30",
   "min_context": 720,
   "origin_stride_hours": 6,
-  "random_seed": 42
+  "random_seed": 42,
+  "timesfm_context_val_mae": {
+    "168": 4513.031132999402,
+    "336": 3961.2172737240826,
+    "720": 3700.838751370614
+  },
+  "timesfm_selected_context": 720
 }
