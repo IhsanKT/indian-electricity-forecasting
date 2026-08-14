@@ -80,8 +80,20 @@ TRAIN_FRAC = 0.70
 VAL_FRAC = 0.15
 TEST_FRAC = 0.15
 
-QUANTILES = (0.1, 0.5, 0.9)
-NOMINAL_COVERAGE = 0.8  # P10-P90 interval
+#: All nine deciles. TimesFM emits these natively, and matching them in LightGBM (nine
+#: quantile objectives per horizon) buys a genuine distributional comparison: CRPS, Winkler
+#: scores, and a calibration curve across five nominal interval levels rather than
+#: coverage at a single 80% band.
+QUANTILES = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+
+#: Central intervals formed from symmetric decile pairs, as (lower, upper, nominal level).
+INTERVAL_LEVELS = (
+    (0.4, 0.6, 0.2),
+    (0.3, 0.7, 0.4),
+    (0.2, 0.8, 0.6),
+    (0.1, 0.9, 0.8),
+)
+NOMINAL_COVERAGE = 0.8  # headline P10-P90 interval
 
 # --------------------------------------------------------------------------------------
 # Reproducibility

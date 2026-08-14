@@ -182,12 +182,23 @@ def stage_lightgbm() -> None:
     point = model.forecast_batch(y, test_origins)
     frame = _frame_from_array("lightgbm", y, test_origins, point)
 
-    print("  fitting quantile models (3 quantiles x 24 horizons) ...")
+    n_q = len(config.QUANTILES)
+    print(f"  fitting quantile models ({n_q} quantiles x {config.HORIZON} horizons) ...")
     t0 = time.time()
     for q in config.QUANTILES:
         qm = LGB.LightGBMForecaster(params=best, quantile=q).fit(y, fit_index)
         frame[f"q{q:g}"] = qm.forecast_batch(y, test_origins).reshape(-1)
         print(f"    q{q:g} done ({time.time()-t0:.1f}s elapsed)", flush=True)
+
+    # Independently fitted quantile models are not monotone by construction, and here they
+    # cross on most rows. Rearrange before caching so every downstream distributional score
+    # sees a valid distribution.
+    qcols = [f"q{q:g}" for q in config.QUANTILES]
+    before = M.count_quantile_crossings(frame[qcols].to_numpy(float))
+    frame[qcols] = M.rearrange_quantiles(frame[qcols].to_numpy(float))
+    print(f"  quantile crossing before rearrangement: "
+          f"{before['fraction_of_rows']*100:.1f}% of rows, "
+          f"max inversion {before['max_inversion']:,.0f} MW -> rearranged")
 
     _append([frame])
 
@@ -251,41 +262,37 @@ def stage_timesfm(contexts: tuple[int, ...] = config.CONTEXT_LENGTHS,
 
 
 def stage_summary() -> None:
-    """Phases 6 and 7: headline table, error-by-horizon curve, interval calibration."""
-    print("\n=== PHASE 6/7: summary ===")
+    """Phases 6 and 7: headline table, horizon curve, distributional scores, significance."""
+    from src.evaluation import report as RPT
+
+    print("\n=== PHASE 6/7: evaluation report ===")
     meta = json.loads(META_PATH.read_text(encoding="utf-8"))
     scale = float(meta["mase_scale"])
     baseline = meta["stronger_baseline"]
     fc = pd.read_parquet(FORECAST_PATH)
 
     summary = RE.summarise(fc, scale=scale, baseline_model=baseline)
-
-    # Probabilistic block for whichever models carry quantile columns.
-    prob_rows = []
-    for name, d in fc.groupby("model"):
-        if "q0.1" not in d.columns or d["q0.1"].isna().all():
-            continue
-        d = d.dropna(subset=["actual", "q0.1", "q0.5", "q0.9"])
-        prob_rows.append({
-            "model": name,
-            "PICP_80": M.picp(d["actual"], d["q0.1"], d["q0.9"]),
-            "interval_width_MW": M.interval_width(d["q0.1"], d["q0.9"]),
-            "pinball_q10": M.pinball_loss(d["actual"], d["q0.1"], 0.1),
-            "pinball_q50": M.pinball_loss(d["actual"], d["q0.5"], 0.5),
-            "pinball_q90": M.pinball_loss(d["actual"], d["q0.9"], 0.9),
-        })
-    if prob_rows:
-        prob = pd.DataFrame(prob_rows).set_index("model")
-        summary = summary.join(prob, how="left")
-
     summary.to_csv(SUMMARY_PATH)
     RE.error_by_horizon(fc).to_csv(HORIZON_PATH, index=False)
 
-    pd.set_option("display.width", 200)
+    tables = RPT.build_all(fc, scale=scale, baseline=baseline)
+
+    pd.set_option("display.width", 240)
     print(f"\nMASE scale {scale:,.1f} MW (in-sample {baseline} on train); "
-          f"improvement quoted vs {baseline}\n")
-    print(summary.round(3).to_string())
-    print(f"\nwrote {SUMMARY_PATH}\nwrote {HORIZON_PATH}")
+          f"skill quoted vs {baseline}\n")
+    print(tables["summary_detailed"].round(3).to_string())
+
+    if not tables["probabilistic"].empty:
+        print("\n--- distributional scores ---")
+        print(tables["probabilistic"].round(3).to_string())
+
+    if not tables["significance_dm"].empty:
+        print("\n--- Diebold-Mariano (origin-level absolute loss, Newey-West HAC) ---")
+        cols = ["model_A", "model_B", "winner", "dm_stat", "p_value", "significant_1pct"]
+        print(tables["significance_dm"][cols].round(4).to_string(index=False))
+
+    print("\n--- peak-demand accuracy ---")
+    print(tables["peak_metrics"].round(2).to_string())
 
 
 STAGES = {

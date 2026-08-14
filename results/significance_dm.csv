@@ -1,0 +1,11 @@
+model_A,model_B,winner,dm_stat,p_value,mean_loss_diff,n_pairs,hac_lag,favours,significant_5pct,significant_1pct
+lightgbm,seasonal_naive_daily,lightgbm,-1.5329844713784118,0.1256602801549751,-430.926992160892,832,6,A,False,False
+lightgbm,seasonal_naive_weekly,lightgbm,-5.702524723268922,1.6403723046565233e-08,-3097.8404301616933,832,6,A,True,True
+lightgbm,timesfm,timesfm,8.685195694628277,0.0,1511.5734353199525,832,6,B,True,True
+lightgbm,timesfm_ctx896,timesfm_ctx896,9.010802613183458,0.0,1588.8964762166372,832,6,B,True,True
+seasonal_naive_daily,seasonal_naive_weekly,seasonal_naive_daily,-4.829242873736541,1.6314077679879802e-06,-2666.9134380008018,832,6,A,True,True
+seasonal_naive_daily,timesfm,timesfm,8.552247747642499,0.0,1942.500427480844,832,6,B,True,True
+seasonal_naive_daily,timesfm_ctx896,timesfm_ctx896,8.883300960458428,0.0,2019.8234683775295,832,6,B,True,True
+seasonal_naive_weekly,timesfm,timesfm,9.921097398060054,0.0,4609.413865481646,832,6,B,True,True
+seasonal_naive_weekly,timesfm_ctx896,timesfm_ctx896,10.168388296996875,0.0,4686.73690637833,832,6,B,True,True
+timesfm,timesfm_ctx896,timesfm_ctx896,1.986301576988595,0.047327961096690796,77.3230408966847,832,6,B,True,False

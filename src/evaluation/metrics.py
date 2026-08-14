@@ -117,3 +117,89 @@ def interval_width(lower, upper) -> float:
     """Mean width of the prediction interval, in the units of the series (MW)."""
     lo, hi = _as_arrays(lower, upper)
     return float(np.mean(hi - lo))
+
+
+def winkler_score(actual, lower, upper, alpha: float = 0.2) -> float:
+    """Winkler (interval) score for a central (1-alpha) interval. Lower is better.
+
+    PICP alone is gameable: an interval spanning zero to infinity scores perfect coverage
+    and says nothing. Winkler charges the width of the interval and adds a penalty of
+    2/alpha times the shortfall whenever the actual lands outside, so it rewards the
+    narrowest interval that still covers honestly.
+    """
+    a, lo = _as_arrays(actual, lower)
+    _, hi = _as_arrays(actual, upper)
+    width = hi - lo
+    below = a < lo
+    above = a > hi
+    penalty = np.zeros_like(width)
+    penalty[below] = (2.0 / alpha) * (lo[below] - a[below])
+    penalty[above] = (2.0 / alpha) * (a[above] - hi[above])
+    return float(np.mean(width + penalty))
+
+
+def crps_from_quantiles(actual, quantile_preds, taus) -> float:
+    """CRPS approximated from a discrete set of predictive quantiles. Lower is better.
+
+    CRPS integrates the pinball loss over all quantile levels. With a finite grid the
+    standard approximation is 2 * the mean pinball loss across the available levels, which
+    is exact in the limit of a dense grid. Nine deciles is a reasonable grid; with only
+    three it would be too coarse to trust, which is why the whole pipeline emits deciles.
+
+    Unlike PICP or Winkler this scores the entire predictive distribution rather than one
+    interval, so models cannot look good by tuning a single band.
+    """
+    a = np.asarray(actual, dtype=float).ravel()
+    taus = np.asarray(taus, dtype=float).ravel()
+    q = np.asarray(quantile_preds, dtype=float)
+    if q.ndim != 2 or q.shape[1] != taus.size:
+        raise ValueError(f"quantile_preds must be (n, {taus.size}), got {q.shape}")
+    if q.shape[0] != a.size:
+        raise ValueError(f"shape mismatch: actual {a.size} vs quantile rows {q.shape[0]}")
+    losses = [pinball_loss(a, q[:, j], float(t)) for j, t in enumerate(taus)]
+    return float(2.0 * np.mean(losses))
+
+
+def rearrange_quantiles(quantile_preds) -> np.ndarray:
+    """Sort each row's predicted quantiles into non-decreasing order.
+
+    Fitting one model per quantile level gives no guarantee of monotonicity, so estimates
+    routinely cross: a predicted 40th percentile above the predicted 60th. A crossed set is
+    not a valid distribution, and it corrupts CRPS, coverage and interval width.
+
+    Row-wise sorting is the standard rearrangement fix (Chernozhukov, Fernandez-Val &
+    Galichon, 2010), which is guaranteed to weakly *reduce* estimation error against the
+    true monotone quantile function -- it can only help the model it is applied to.
+
+    TimesFM needs none of this: it is compiled with `fix_quantile_crossing=True` and its
+    output is already monotone.
+    """
+    q = np.asarray(quantile_preds, dtype=float)
+    if q.ndim != 2:
+        raise ValueError(f"expected a 2-D (n, n_quantiles) array, got shape {q.shape}")
+    return np.sort(q, axis=1)
+
+
+def count_quantile_crossings(quantile_preds) -> dict[str, float]:
+    """Diagnose how badly a set of quantile predictions violates monotonicity."""
+    q = np.asarray(quantile_preds, dtype=float)
+    diffs = np.diff(q, axis=1)
+    rows = (diffs < 0).any(axis=1)
+    return {
+        "rows_with_crossing": int(rows.sum()),
+        "fraction_of_rows": float(rows.mean()) if rows.size else 0.0,
+        "max_inversion": float(np.abs(np.minimum(diffs, 0)).max()) if diffs.size else 0.0,
+    }
+
+
+def quantile_calibration(actual, quantile_preds, taus) -> dict[float, float]:
+    """Empirical exceedance rate at each nominal quantile level.
+
+    For a perfectly calibrated model the fraction of actuals falling at or below the
+    predicted tau-quantile is tau. Deviations show *where* a model is miscalibrated -- a
+    single coverage number cannot distinguish a tail problem from a systematic shift.
+    """
+    a = np.asarray(actual, dtype=float).ravel()
+    q = np.asarray(quantile_preds, dtype=float)
+    taus = np.asarray(taus, dtype=float).ravel()
+    return {float(t): float(np.mean(a <= q[:, j])) for j, t in enumerate(taus)}

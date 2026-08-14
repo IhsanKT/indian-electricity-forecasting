@@ -1,0 +1,4 @@
+model,rows_with_crossing,fraction_of_rows,max_inversion
+lightgbm,0,0.0,0.0
+timesfm,0,0.0,0.0
+timesfm_ctx896,0,0.0,0.0

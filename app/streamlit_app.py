@@ -84,12 +84,18 @@ context = y.loc[:origin].iloc[-168:]
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=context.index, y=context.to_numpy(), name="History (7 days)",
                          line=dict(color="#888", width=1.5)))
-if "q0.1" in window.columns and window["q0.1"].notna().any():
-    fig.add_trace(go.Scatter(x=window["target_time"], y=window["q0.9"], name="P90",
-                             line=dict(width=0), showlegend=False))
-    fig.add_trace(go.Scatter(x=window["target_time"], y=window["q0.1"], name="P10-P90",
-                             fill="tonexty", fillcolor="rgba(99,110,250,0.22)",
-                             line=dict(width=0)))
+# Fan chart: nested decile bands, darkest in the middle.
+for lo_q, hi_q, level in reversed(config.INTERVAL_LEVELS):
+    lo_col, hi_col = f"q{lo_q:g}", f"q{hi_q:g}"
+    if lo_col not in window.columns or window[lo_col].isna().all():
+        continue
+    shade = 0.10 + 0.16 * (1.0 - level)
+    fig.add_trace(go.Scatter(x=window["target_time"], y=window[hi_col],
+                             line=dict(width=0), showlegend=False, hoverinfo="skip"))
+    fig.add_trace(go.Scatter(x=window["target_time"], y=window[lo_col],
+                             name=f"P{int(lo_q*100)}–P{int(hi_q*100)}", fill="tonexty",
+                             fillcolor=f"rgba(99,110,250,{shade:.2f})",
+                             line=dict(width=0), hoverinfo="skip"))
 fig.add_trace(go.Scatter(x=window["target_time"], y=window["actual"], name="Actual",
                          line=dict(color="#111", width=2.5)))
 fig.add_trace(go.Scatter(x=window["target_time"], y=window["prediction"], name="Forecast",
@@ -124,6 +130,45 @@ if curve is not None:
 # --------------------------------------------------------------------------------------
 # History
 # --------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
+# Calibration
+# --------------------------------------------------------------------------------------
+cal = load_table(config.RESULTS_DIR / "calibration.csv")
+if cal is not None and not cal.empty:
+    st.header("Interval calibration")
+    fig4 = go.Figure()
+    fig4.add_trace(go.Scatter(x=[0, 1], y=[0, 1], name="Perfect calibration",
+                              line=dict(color="#999", dash="dash")))
+    for name, d in cal.groupby("model"):
+        d = d.sort_values("nominal")
+        fig4.add_trace(go.Scatter(x=d["nominal"], y=d["empirical"], name=name,
+                                  mode="lines+markers"))
+    fig4.update_layout(height=420, xaxis_title="Nominal quantile",
+                       yaxis_title="Empirical fraction below", hovermode="x unified",
+                       margin=dict(t=30))
+    st.plotly_chart(fig4, use_container_width=True)
+    st.caption("Points on the diagonal mean the stated quantiles are honest. Below the "
+               "diagonal in the upper tail means the model is overconfident.")
+
+    prob = load_table(config.RESULTS_DIR / "probabilistic.csv")
+    if prob is not None:
+        st.dataframe(prob.round(3), use_container_width=True)
+        st.caption("CRPS scores the whole predictive distribution; Winkler charges interval "
+                   "width plus a penalty for misses, so a uselessly wide interval cannot win.")
+
+# --------------------------------------------------------------------------------------
+# Significance
+# --------------------------------------------------------------------------------------
+dm = load_table(config.RESULTS_DIR / "significance_dm.csv")
+if dm is not None and not dm.empty:
+    st.header("Is the gap statistically significant?")
+    cols = [c for c in ("model_A", "model_B", "winner", "dm_stat", "p_value",
+                        "significant_1pct") if c in dm.columns]
+    st.dataframe(dm[cols].round(4), use_container_width=True)
+    st.caption("Diebold-Mariano on origin-level absolute loss, with a Newey-West HAC "
+               "variance estimator — overlapping 24h windows are autocorrelated, and "
+               "ignoring that would manufacture significance.")
+
 st.header("Historical demand")
 fig3 = go.Figure()
 daily = y.resample("D").mean()
