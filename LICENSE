@@ -19,25 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-NOTE ON DATA
-
-This licence covers the source code in this repository only.
-
-The electricity demand data used by this project is NOT covered by the MIT
-licence and is not redistributed here. It is licensed separately under
-Creative Commons Attribution 4.0 International (CC BY 4.0):
-
-  Mukherjee, Debanjan; Kalita, Karuna; Kumar, Subhash (2024),
-  "Electricity Demand, Solar and Wind Generation Data
-  (September 2021 - June 2025) of India at 1-hour interval",
-  Mendeley Data, V2, doi: 10.17632/y58jknpgs8.2
-  https://doi.org/10.17632/y58jknpgs8.2
-
-Original data: Grid-India / NERLDC, Ministry of Power, Government of India.
-
-CC BY 4.0 requires attribution when the data is reused. Anyone running this
-pipeline downloads the data directly from Mendeley and is bound by that
-licence, not this one.

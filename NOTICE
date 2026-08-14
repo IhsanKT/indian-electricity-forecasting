@@ -1,0 +1,28 @@
+THIRD-PARTY DATA NOTICE
+=======================
+
+The MIT licence in LICENSE covers the source code in this repository only.
+
+The electricity demand data this project consumes is licensed separately and is
+NOT redistributed here -- `data/` is gitignored, and `src/data/download.py`
+fetches the files directly from the original repository at run time.
+
+  Dataset:  Electricity Demand, Solar and Wind Generation Data
+            (September 2021 - June 2025) of India at 1-hour interval
+  Authors:  Mukherjee, Debanjan; Kalita, Karuna; Kumar, Subhash (2024)
+  Source:   Mendeley Data, V2
+  DOI:      10.17632/y58jknpgs8.2
+  URL:      https://doi.org/10.17632/y58jknpgs8.2
+  Licence:  Creative Commons Attribution 4.0 International (CC BY 4.0)
+            https://creativecommons.org/licenses/by/4.0/
+
+  Original data: Grid-India (formerly POSOCO) / North-Eastern Regional Load
+  Despatch Centre, Ministry of Power, Government of India.
+
+CC BY 4.0 permits reuse, including commercially, provided attribution is given
+and changes are indicated. Anyone running this pipeline downloads the data
+themselves and is bound by that licence rather than by the MIT terms above.
+
+This project aggregates the source data from its native 5-minute and 10-second
+SCADA resolutions to hourly means; see docs/data_audit.md for the full
+description of what was changed and why.

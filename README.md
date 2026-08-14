@@ -439,7 +439,8 @@ everything the results depend on is reachable by the test suite.
 
 ## Licence and attribution
 
-Code: MIT. Data: CC BY 4.0 — Mukherjee, Debanjan; Kalita, Karuna; Kumar, Subhash (2024),
+Code: **MIT** ([`LICENSE`](LICENSE)). Data: **CC BY 4.0**, not redistributed here — see
+[`NOTICE`](NOTICE). Mukherjee, Debanjan; Kalita, Karuna; Kumar, Subhash (2024),
 *Electricity Demand, Solar and Wind Generation Data (September 2021 – June 2025) of India at
 1-hour interval*, Mendeley Data, V2, doi: 10.17632/y58jknpgs8.2. Original data Grid-India /
 NERLDC, Ministry of Power, Government of India.
