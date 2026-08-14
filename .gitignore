@@ -12,8 +12,9 @@ results/eda/
 !results/run_metadata.json
 !results/lightgbm_tuning.json
 
-# Model checkpoints (TimesFM 2.5 ~800MB, Chronos-2 ~500MB)
-models/
+# Model checkpoints (TimesFM 2.5 ~400MB). Anchored with a leading slash: a bare "models/"
+# also matches src/models/, which silently dropped the entire model package from the repo.
+/models/
 *.ckpt
 *.safetensors
 .cache/
