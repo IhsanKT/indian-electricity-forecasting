@@ -1,0 +1,32 @@
+# Data — never committed. Raw is re-downloadable from the Mendeley DOI (see docs/data_audit.md),
+# processed is reproducible from raw via src/data/preprocess.py.
+data/raw/
+data/processed/
+
+# Cached forecasts — reproducible from src/evaluation/rolling_evaluation.py
+results/
+
+# Model checkpoints (TimesFM 2.5 ~800MB, Chronos-2 ~500MB)
+models/
+*.ckpt
+*.safetensors
+.cache/
+huggingface/
+
+# Environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
