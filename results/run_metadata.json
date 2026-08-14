@@ -1,0 +1,30 @@
+{
+  "mase_scale": 4445.199642420783,
+  "mase_scale_basis": "seasonal_naive_daily",
+  "scale_daily": 4445.199642420783,
+  "scale_weekly": 7154.367735338044,
+  "stronger_baseline": "seasonal_naive_daily",
+  "validation_mae": {
+    "seasonal_naive_daily": 5300.413107057416,
+    "seasonal_naive_weekly": 8506.606895933013
+  },
+  "weekly_seasonality_check": {
+    "lag_mae": {
+      "24": 4445.199642420783,
+      "120": 7590.225014449016,
+      "144": 7694.591449554758,
+      "168": 7154.367735338044,
+      "192": 8211.823649382868
+    },
+    "lag168_is_local_minimum": true,
+    "dow_spread_pct": 4.411114243057149,
+    "hod_spread_pct": 20.285094129873254
+  },
+  "n_test_origins": 832,
+  "n_val_origins": 836,
+  "test_start": "2024-11-28 00:00:00+05:30",
+  "test_end": "2025-06-24 23:00:00+05:30",
+  "min_context": 720,
+  "origin_stride_hours": 6,
+  "random_seed": 42
+}

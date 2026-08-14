@@ -3,8 +3,14 @@
 data/raw/
 data/processed/
 
-# Cached forecasts — reproducible from src/evaluation/rolling_evaluation.py
-results/
+# Cached forecasts — large and reproducible from src/run_experiments.py.
+results/*.parquet
+results/eda/
+# ...but the small result tables ARE the deliverable, so they stay in the repo:
+!results/summary.csv
+!results/error_by_horizon.csv
+!results/run_metadata.json
+!results/lightgbm_tuning.json
 
 # Model checkpoints (TimesFM 2.5 ~800MB, Chronos-2 ~500MB)
 models/

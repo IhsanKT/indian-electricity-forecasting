@@ -1,0 +1,31 @@
+# Python 3.12. Everything runs on CPU — no GPU required.
+#
+# torch must come from the CPU wheel index, otherwise pip pulls a multi-GB CUDA build that
+# this project has no use for:
+#
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements.txt
+
+# --- core ---
+numpy==2.5.2
+pandas==3.0.5
+scipy==1.18.0
+scikit-learn==1.9.0
+
+# --- data ingest ---
+openpyxl==3.1.5          # reads the Mendeley .xlsx workbooks in streaming mode
+pyarrow==24.0.0          # Parquet cache for the processed series and forecasts
+
+# --- models ---
+lightgbm==4.7.0
+torch==2.13.0+cpu
+timesfm==2.0.2           # provides TimesFM_2p5_200M_torch
+holidays==0.102          # holidays.India for calendar features
+
+# --- visualisation and app ---
+plotly==6.9.0
+streamlit==1.61.1
+
+# --- notebooks and tests ---
+nbformat==5.11.0
+pytest==9.1.1
